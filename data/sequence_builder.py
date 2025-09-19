@@ -18,11 +18,8 @@ def get_ensembl_id_json(ensembl_id: str):
     decoded = r.json()
     return decoded
 
-def main(split: str):
-    # Get the directory of the current script
+def build_sequence_csv(split: str):
     script_dir = Path(__file__).resolve().parent
-
-    # Construct path to the CSV
     csv_path = script_dir / f'{split}.csv'
     
     if not csv_path.exists():
@@ -48,6 +45,9 @@ def main(split: str):
     output_path = script_dir / f'{split}_seq.csv'
     df.to_csv(output_path)
     print(f"Saved sequences to {output_path}")
+
+def main(split: str):
+    build_sequence_csv(split)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download Ensembl sequences for train or test split.")
