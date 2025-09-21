@@ -1,5 +1,3 @@
 __pycache__
-train_seq.csv
-test_seq.csv
-train_info.csv
-test_info.csv
+Sequences.csv
+Info.csv
