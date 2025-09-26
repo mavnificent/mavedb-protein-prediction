@@ -1,4 +1,4 @@
-from data import sequence_builder
+from data import sequence_builder, scoresets_builder
 from data.dataset import ProteinDataset
 from pathlib import Path
 from torch.utils.data import DataLoader
@@ -9,7 +9,9 @@ import pandas as pd
 if __name__ == '__main__':
     if not Path('data/Sequences.csv').exists():
         sequence_builder.build_sequence_csv()
-        
+    
+    if not Path('data/Info.csv').exists():
+        scoresets_builder.build_scoreset_csv()
         
     data_dir=Path('./data')
     variants = pd.read_csv(data_dir/f'{'train'}.csv')
