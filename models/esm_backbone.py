@@ -1,14 +1,19 @@
 import torch
 from transformers import AutoTokenizer, EsmModel
 from pathlib import Path
+import torch.nn as nn
 
 weight_dir = Path(__file__).resolve().parent / Path('weights')
 
-class ESM():
+class ESM(nn.Module):
     def __init__(self, model_name: str="facebook/esm2_t33_650M_UR50D"):
+        super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, do_lower_case=False)
-        self.model = EsmModel.from_pretrained(model_name, add_pooling_layer=False, cache_dir=weight_dir)
-    
+        self.model = EsmModel.from_pretrained(model_name, 
+                                              add_pooling_layer=False, 
+                                              cache_dir=weight_dir)
+
+        
     def _mean_pool(self, last_hidden_state, attention_mask):
         """
         Compute mean embeddings per sequence, ignoring CLS, SEP, and PAD tokens.
@@ -64,7 +69,7 @@ class ESM():
             truncation=bool(max_length),
             max_length=max_length
         )
-        
+        inputs.to(self.model.device)
         with torch.no_grad():
             outputs = self.model(**inputs)
         
