@@ -2,11 +2,13 @@ import torch
 from transformers import AutoTokenizer, EsmModel
 from pathlib import Path
 import torch.nn as nn
+from typing import Literal
 
 weight_dir = Path(__file__).resolve().parent / Path('weights')
+model_choices = Literal["facebook/esm2_t6_8M_UR50D", "facebook/esm2_t12_35M_UR50D", "facebook/esm2_t30_150M_UR50D","facebook/esm2_t33_650M_UR50D", "facebook/esm2_t36_3B_UR50D"]
 
 class ESM(nn.Module):
-    def __init__(self, model_name: str="facebook/esm2_t33_650M_UR50D"):
+    def __init__(self, model_name: model_choices="facebook/esm2_t33_650M_UR50D"):
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, do_lower_case=False)
         self.model = EsmModel.from_pretrained(model_name, 
@@ -31,11 +33,11 @@ class ESM(nn.Module):
         # Zero out CLS (first token) and SEP (last real token)
         seq_lengths = mask.sum(dim=1)           # sum of real tokens per sequence
         batch_indices = torch.arange(mask.size(0))
-        mask[:, 0] = 0                          # CLS
-        mask[batch_indices, seq_lengths - 1] = 0  # SEP
+        mask[:, 0] = 0                              # CLS
+        mask[batch_indices, seq_lengths - 1] = 0    # SEP
         
         # Expand mask for broadcasting
-        mask_expanded = mask.unsqueeze(-1)       # (batch_size, seq_len, 1)
+        mask_expanded = mask.unsqueeze(-1)          # (batch_size, seq_len, 1)
         
         # Sum embeddings over valid positions
         sum_embs = (last_hidden_state * mask_expanded).sum(dim=1)
