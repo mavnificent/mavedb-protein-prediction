@@ -17,6 +17,6 @@ if __name__ == '__main__':
     variants = pd.read_csv(data_dir/f'{'train'}.csv')
     Sequences = pd.read_csv(data_dir/'Sequences.csv', index_col='ensp')
 
-    train_dataset = ProteinDataset(split="train", variants=variants, Sequences=Sequences, encoding="one-hot")
+    train_dataset = ProteinDataset(split="train", variants=variants, Sequences=Sequences, encoding="one-hot-segment") #changing from one-hot for testing
 
     train_linear_model(train_dataset=train_dataset, batch_size=2048)

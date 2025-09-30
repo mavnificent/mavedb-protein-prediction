@@ -19,6 +19,8 @@ dependencies = [
     "huggingface_hub",
     "safetensors",
     "xgboost>=3.0.5",
+    "umap-learn (>=0.5.9.post2,<0.6.0)",
+    "plotly (>=6.3.0,<7.0.0)",
 ]
 
 [project.optional-dependencies]
