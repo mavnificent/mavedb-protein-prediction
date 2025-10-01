@@ -8,7 +8,7 @@ def get_ensembl_id_json(ensembl_id: str):
     server = "https://rest.ensembl.org"
     ext = f"/sequence/id/{ensembl_id}"
  
-    r = requests.get(server+ext, headers={ "Content-Type" : "application/json"})
+    r = requests.get(server+ext, headers={"Content-Type": "application/json"})
     
     if not r.ok:
         r.raise_for_status()
