@@ -1,4 +1,5 @@
 __pycache__
 Sequences.csv
 Info.csv
-models/weights
+utils/weights
+*.png
