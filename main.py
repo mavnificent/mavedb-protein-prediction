@@ -2,7 +2,7 @@ from data import sequence_builder, scoresets_builder
 from data.dataset import ProteinDataset
 from pathlib import Path
 from torch.utils.data import DataLoader
-from models.linear_regression import train_linear_model
+from models.linear_regression import train_model
 import pandas as pd
 
 
@@ -19,4 +19,4 @@ if __name__ == '__main__':
 
     train_dataset = ProteinDataset(split="train", variants=variants, Sequences=Sequences, encoding="one-hot")
 
-    train_linear_model(train_dataset=train_dataset, batch_size=2048)
+    train_model(train_dataset=train_dataset, model_name="LinearRegression", save_name="one-hot-LinearRegression.pt", batch_size=2048)
