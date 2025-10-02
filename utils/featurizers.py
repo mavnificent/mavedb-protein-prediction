@@ -1,11 +1,8 @@
-import pandas as pd
 import torch
-from torch.utils.data import Dataset
-from typing import Literal
-from pathlib import Path
-import torch.nn.functional as F
-import random
 import math
+import random
+import torch.nn.functional as F
+
 
 def mutate_protein(wt_seq: str, mutation_position: int, new_aa: str) -> str:
     """
@@ -100,38 +97,3 @@ def one_hot_encode(seq: str, positional_encoding: torch.Tensor | None = None) ->
             raise ValueError(f"Shape mismatch: one-hot {one_hot_matrix.shape}, PE {positional_encoding.shape}")
         one_hot_matrix = one_hot_matrix + positional_encoding
     return one_hot_matrix.flatten()
-
-
-class ProteinDataset(Dataset):
-    def __init__(self, split: Literal['train', 'test'], variants, Sequences, encoding: Literal['one-hot', 'one-hot-segment'] | None = None):
-        # file_dir = Path(__file__).resolve().parent
-        self.split = split
-        self.encoding = encoding
-        # self.variants = pd.read_csv(file_dir/f'{split}.csv')
-        # self.Sequences = pd.read_csv(file_dir/'Sequences.csv', index_col='ensp')
-        
-        self.variants = variants
-        self.Sequences = Sequences
-    def __len__(self):
-        return self.variants.shape[0]
-    
-    def __getitem__(self, index):
-        variant = self.variants.iloc[index]
-        wt_seq = self.Sequences.loc[variant['ensp']]['wt_seq']
-        mutation_position = variant['pos'] - 1 # -1 to reindex to 0
-        variant_seq = mutate_protein(wt_seq, mutation_position, variant['alt_short'])
-        
-        if self.encoding == "one-hot-segment":
-            variant_pe = get_sinusoidal_positional_encoding(len(variant_seq), 20)
-            variant_segment, variant_segment_pe = center_protein_on_mutation(seq=variant_seq, 
-                                                                             mutation_position= mutation_position,
-                                                                             segment_length=500,
-                                                                             max_jitter=15,
-                                                                             positional_encoding=variant_pe)
-            variant_seq = one_hot_encode(seq=variant_segment, positional_encoding=variant_segment_pe) 
-        
-        elif self.encoding == "one-hot":
-            variant_seq = variant_seq + " " * max(0, 4834 - len(variant_seq))
-            variant_seq = one_hot_encode(seq=variant_seq)            
-
-        return variant_seq, variant['accession'], variant['score'].item()

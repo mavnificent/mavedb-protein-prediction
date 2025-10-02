@@ -1,19 +1,50 @@
 import torch
+import torch.nn as nn
 from transformers import AutoTokenizer, EsmModel
 from pathlib import Path
-import torch.nn as nn
 from typing import Literal
+from utils.registry import register_model, MODEL_REGISTRY
 
-weight_dir = Path(__file__).resolve().parent / Path('weights')
-model_choices = Literal["facebook/esm2_t6_8M_UR50D", "facebook/esm2_t12_35M_UR50D", "facebook/esm2_t30_150M_UR50D","facebook/esm2_t33_650M_UR50D", "facebook/esm2_t36_3B_UR50D"]
+@register_model
+class LinearRegression(nn.Module):
+    def __init__(self, in_dim: int):
+        super().__init__()
+        self.linear = nn.Linear(in_dim, 1)
 
-class ESM(nn.Module):
-    def __init__(self, model_name: model_choices="facebook/esm2_t33_650M_UR50D"):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.linear(x).squeeze(-1)  # shape (batch,)
+    
+@register_model
+class SimpleMLP(nn.Module):
+    def __init__(self, in_dim: int, hidden_dim: int = 128):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(in_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim * 2),
+            nn.ReLU(),
+            nn.Linear(hidden_dim * 2, 1),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.net(x).squeeze(-1)  # shape (batch,)
+    
+WEIGHT_DIR = Path(__file__).resolve().parent / Path('weights')
+ESM_CHOICES = Literal["facebook/esm2_t6_8M_UR50D",
+                      "facebook/esm2_t12_35M_UR50D",
+                      "facebook/esm2_t30_150M_UR50D",
+                      "facebook/esm2_t33_650M_UR50D",
+                      "facebook/esm2_t36_3B_UR50D"]
+
+@register_model
+class ESMBackbone(nn.Module):
+    def __init__(self, 
+                 model_name: ESM_CHOICES="facebook/esm2_t33_650M_UR50D"):
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, do_lower_case=False)
-        self.model = EsmModel.from_pretrained(model_name, 
+        self.model: EsmModel = EsmModel.from_pretrained(model_name, 
                                               add_pooling_layer=False, 
-                                              cache_dir=weight_dir)
+                                              cache_dir=WEIGHT_DIR)
 
         
     def _mean_pool(self, last_hidden_state, attention_mask):
@@ -74,5 +105,24 @@ class ESM(nn.Module):
         inputs.to(self.model.device)
         with torch.no_grad():
             outputs = self.model(**inputs)
+            return self._mean_pool(outputs.last_hidden_state, inputs["attention_mask"])
         
-        return self._mean_pool(outputs.last_hidden_state, inputs["attention_mask"])
+
+@register_model
+class ESMRegressor(ESMBackbone):
+    def __init__(self, model_name: ESM_CHOICES = "facebook/esm2_t33_650M_UR50D"):
+        super().__init__(model_name=model_name)
+        self.hidden_dim= int(self.model.config.hidden_size) # type: ignore
+        self.regressor = nn.Linear(self.hidden_dim, 1)  # regression head
+
+    def forward(self, seqs: list[str], max_length: int | None = None):
+        """
+        Args:
+            seqs: list of protein sequences
+        Returns:
+            Tensor of shape (batch_size,)
+        """
+        # ESMBackbone forward returns pooled embeddings
+        embeddings = super().forward(seqs, max_length=max_length)
+        preds = self.regressor(embeddings)
+        return preds.squeeze(-1)
