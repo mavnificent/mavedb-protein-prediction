@@ -134,4 +134,4 @@ class ProteinDataset(Dataset):
             variant_seq = variant_seq + " " * max(0, 4834 - len(variant_seq))
             variant_seq = one_hot_encode(seq=variant_seq)            
 
-        return variant_seq, variant['score'].item()
+        return variant_seq, variant['accession'], variant['score'].item()
