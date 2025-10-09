@@ -98,7 +98,6 @@ def train_model(
     """
     DATA_DIR = Path(data_dir)
     WEIGHT_DIR = Path(weight_dir)
-    # WEIGHT_DIR.mkdir(exist_ok=True)
     MODEL_SAVE_PATH = WEIGHT_DIR / save_name
 
     device = device or get_torch_device()
