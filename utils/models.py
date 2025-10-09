@@ -6,7 +6,7 @@ from typing import Literal
 from utils.registry import register_model, MODEL_REGISTRY
 
 @register_model
-class LinearRegression(nn.Module):
+class OneHotRegression(nn.Module):
     def __init__(self, in_dim: int):
         super().__init__()
         self.linear = nn.Linear(in_dim, 1)
@@ -15,7 +15,7 @@ class LinearRegression(nn.Module):
         return self.linear(x).squeeze(-1)  # shape (batch,)
     
 @register_model
-class SimpleMLP(nn.Module):
+class OneHotMLP(nn.Module):
     def __init__(self, in_dim: int, hidden_dim: int = 128):
         super().__init__()
         self.net = nn.Sequential(
