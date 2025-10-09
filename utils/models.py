@@ -2,11 +2,17 @@ import torch
 import torch.nn as nn
 from transformers import AutoTokenizer, EsmModel
 from pathlib import Path
-from typing import Literal
-from utils.registry import register_model, MODEL_REGISTRY
+from typing import Literal, Type, Dict
+
+MODEL_REGISTRY: Dict[str, Type[nn.Module]] = {}
+
+def register_model(cls: Type[nn.Module]) -> Type[nn.Module]:
+    """Decorator to register a model by class name."""
+    MODEL_REGISTRY[cls.__name__] = cls
+    return cls
 
 @register_model
-class OneHotRegression(nn.Module):
+class OneHotRegressor(nn.Module):
     def __init__(self, in_dim: int):
         super().__init__()
         self.linear = nn.Linear(in_dim, 1)

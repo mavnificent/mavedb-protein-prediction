@@ -1,6 +1,6 @@
 from pathlib import Path
 from data.data_builders import build_scoreset_csv, build_sequence_csv
-from scripts.train_esmregressor import train
+from utils.train_eval import train_model
 
 if __name__ == "__main__":
     # -----------------------------
@@ -13,12 +13,14 @@ if __name__ == "__main__":
         build_scoreset_csv()
 
 
-    train(
-        model_name="facebook/esm2_t6_8M_UR50D",
-        batch_size=10,
+    train_model(
+        model_name="OneHotRegressor",
+        batch_size=1,
         epochs=1,
         lr=1e-3,
         weight_decay=1e-2,
         num_workers=4,
+        data_dir="data",
         save_name="esmregressor.pt",
+        dataset_encoding="one-hot-segment"
     )
