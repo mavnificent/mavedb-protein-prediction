@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 from tqdm import tqdm
 from typing import Dict
+from io import StringIO
 
 
 def get_scoreset_json(scoreset_urn) -> Dict:
@@ -93,3 +94,37 @@ def build_sequence_csv():
     output_path = script_dir / 'Sequences.csv'
     df_out.to_csv(output_path, index=False)
     print(f"Saved sequences to {output_path}")
+
+def get_TestScore_csv():
+    
+    input_csv = 'test.csv'
+    script_dir = Path(__file__).resolve().parent
+
+    all_ensp = pd.read_csv(script_dir / input_csv)[['scoreset']]
+
+    scoreset_urns = all_ensp['scoreset'].drop_duplicates().tolist()
+
+    all_scores = []
+
+    for urn in scoreset_urns:
+        url = f"https://api.mavedb.org/api/v1/score-sets/{urn}/scores"
+        response = requests.get(url)
+        
+        if response.ok:
+            data = response.text
+            df = pd.read_csv(StringIO(response.text))
+            score = df[['accession','score']]
+            all_scores.append(score)
+        else:
+            print(f"Failed to fetch {urn}: {response.status_code}")
+    
+    if all_scores:
+        df_out = pd.concat(all_scores, ignore_index = True)
+        output_path = script_dir / 'TestScore.csv'
+        df_out.to_csv(output_path, index=False)
+        print(f"Saved score info to {output_path}")
+    else:
+        print('No scores downloaded.')
+
+if __name__ == '__main__':
+    get_TestScore_csv()
